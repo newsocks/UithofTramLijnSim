@@ -4,3 +4,9 @@ c:\users\iron\documents\visual studio 2015\Projects\UithofTramLijn\UithofTramLij
 c:\users\iron\documents\visual studio 2015\Projects\UithofTramLijn\UithofTramLijn\obj\Debug\UithofTramLijn.csprojResolveAssemblyReference.cache
 c:\users\iron\documents\visual studio 2015\Projects\UithofTramLijn\UithofTramLijn\obj\Debug\UithofTramLijn.exe
 c:\users\iron\documents\visual studio 2015\Projects\UithofTramLijn\UithofTramLijn\obj\Debug\UithofTramLijn.pdb
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\bin\Debug\UithofTramLijn.exe.config
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\obj\Debug\UithofTramLijn.exe
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\obj\Debug\UithofTramLijn.pdb
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\bin\Debug\UithofTramLijn.exe
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\bin\Debug\UithofTramLijn.pdb
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\obj\Debug\UithofTramLijn.csprojResolveAssemblyReference.cache

@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="EventHandler.cs" />
     <Compile Include="Scheduler.cs" />
+    <Compile Include="Tram.cs" />
     <Compile Include="UithofTrack.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

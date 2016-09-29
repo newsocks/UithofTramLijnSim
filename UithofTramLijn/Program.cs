@@ -7,22 +7,20 @@ using System.Threading.Tasks;
 
 namespace UithofTramLijn
 {
-
-
-  class Program
-  {
-    static void Main(string[] args)
+    class Program
     {
-      
-      Scheduler scheduler = new Scheduler();
-      EventHandler eventhandler = new EventHandler(scheduler);
+        static void Main(string[] args)
+        {
+            UithofTrack uithofTrack = new UithofTrack();
+            Scheduler scheduler = new Scheduler(uithofTrack);
+            EventHandler eventhandler = new EventHandler(scheduler, uithofTrack);
 
-      bool end = false;
+            bool end = false;
 
-      while (!end) {
-        end = eventhandler.HandleEvent();
-      }
-      
+            while (!end)
+            {
+                end = eventhandler.HandleEvent();
+            }
+        }
     }
-  }
 }
