@@ -30,17 +30,21 @@ namespace UithofTramLijn
             {
                 case EventType.ExpectedArival:
                     tram = UithofTrack.Trams.Where(x => x.id == Event.TramId).First();
-                    if(!UithofTrack.Stops[tram.nextStation].Occupied)
+                    Tram tramInFront = UithofTrack.Trams.Where(x => x.id == tram.inFrontId).First();
+                    if(!UithofTrack.Stops[tram.nextStation].Occupied 
+                        && (tramInFront.nextStation != tram.nextStation || tramInFront.id == tram.id))
                     {
                         //TODO: 20 vervangen door goede waarde
                         if (UithofTrack.Stops[tram.nextStation].LastOccupied + 20 > curTime)
                         {
-                            Console.Out.WriteLine("Reschedule because within 20 sec");
-                            Scheduler.EventQue.Add(UithofTrack.Stops[tram.nextStation].LastOccupied + 20 + ((double)tram.id)/100000000, new Event()
                             {
-                                TramId = tram.id,
-                                type = EventType.ExpectedArival,
-                            });
+                                Console.Out.WriteLine("Reschedule because within 20 sec");
+                                Scheduler.EventQue.Add(UithofTrack.Stops[tram.nextStation].LastOccupied + 20, new Event()
+                                {
+                                    TramId = tram.id,
+                                    type = EventType.ExpectedArival,
+                                });
+                            }
                         }
                         else
                         {
@@ -91,7 +95,12 @@ namespace UithofTramLijn
                                 }
                                 else
                                 {
-                                    if (candidate.nextStation <= bestNextStation)
+                                    if (candidate.nextStation > 8)
+                                    {
+                                        best = candidate;
+                                        bestNextStation = candidate.nextStation;
+                                    }
+                                    else if (candidate.nextStation <= bestNextStation)
                                     {
                                         best = candidate;
                                         bestNextStation = candidate.nextStation;
@@ -138,7 +147,12 @@ namespace UithofTramLijn
                             }
                             else
                             {
-                                if (candidate.nextStation <= bestNextStation)
+                                if (candidate.nextStation > 9)
+                                {
+                                    best = candidate;
+                                    bestNextStation = candidate.nextStation;
+                                }
+                                else if (candidate.nextStation <= bestNextStation)
                                 {
                                     best = candidate;
                                     bestNextStation = candidate.nextStation;
@@ -157,6 +171,7 @@ namespace UithofTramLijn
                         UithofTrack.Trams.Add(cur);
                         UithofTrack.Stops[9].Occupied = true;
                         Scheduler.scheduleEvent(EventType.Leaves, curTime, cur, false);
+                        Console.Out.WriteLine("Tram " + id + " spawned!");
                     }
                     else
                     {
@@ -187,7 +202,8 @@ namespace UithofTramLijn
                     }
                     if (doSomething)
                     {
-                        Scheduler.scheduleEvent(EventType.ExpectedArival, curTime, itemTram, true);
+                        // TODO: DIE 20 ><
+                        Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
                         onHold.RemoveAt(doWithId);
                     }
                     else
@@ -205,9 +221,13 @@ namespace UithofTramLijn
                         }
                         if (doSomething)
                         {
-                            Scheduler.scheduleEvent(EventType.ExpectedSpawn, curTime, itemTram, true);
+                            Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
                             onHold.RemoveAt(doWithId);
                         }
+                    }
+                    if (doSomething)
+                    {
+                        Console.Out.WriteLine("Hold opgeheven, nog " + onHold.Count + " in de lijst");
                     }
 
                     // makes tram go to correct station, always +1, 8=>10, 17=>1

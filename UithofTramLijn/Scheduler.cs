@@ -16,27 +16,20 @@ namespace UithofTramLijn
         {
             uithofTrack = track;
             scheduleEvent(EventType.SimulationFinished, 0, null, false);
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < 15; i++)
             {
-                EventQue.Add(i, new Event() { type = EventType.ExpectedSpawn });
+                EventQue.Add(i*240, new Event() { type = EventType.ExpectedSpawn });
             }
         }
 
-        public void scheduleEvent(EventType type, double currentTime, Tram tram, bool onHold)
+        public void scheduleEvent(EventType type, double currentTime, Tram tram, bool buitenDienst)
         {
             double key;
             Event value;
             switch (type)
             {
                 case EventType.ExpectedArival:
-                    if (onHold)
-                    {
-                        key = currentTime + 20;//TODO: goede tijd neerzetten
-                    }
-                    else
-                    {
-                        key = currentTime + uithofTrack.Stops[tram.nextStation].TravelTime;
-                    }
+                    key = currentTime + uithofTrack.Stops[tram.nextStation].TravelTime;
                     value = new Event() { type = EventType.ExpectedArival, TramId = tram.id };
                     EventQue.Add(key, value);
                     break;
@@ -51,7 +44,7 @@ namespace UithofTramLijn
                     EventQue.Add(currentTime + 20, new Event() { type = EventType.ExpectedSpawn });//TODO: GOEDE TIJD
                     break;
                 case EventType.SimulationFinished:
-                    EventQue.Add(3000, new Event() { type = EventType.SimulationFinished });
+                    EventQue.Add(7200, new Event() { type = EventType.SimulationFinished });
                     break;
                 default:
                     break;

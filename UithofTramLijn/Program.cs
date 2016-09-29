@@ -21,6 +21,7 @@ namespace UithofTramLijn
             {
                 end = eventhandler.HandleEvent();
             }
+            Console.In.ReadLine();
         }
     }
 }
