@@ -31,14 +31,60 @@ namespace UithofTramLijn
                 case EventType.ExpectedArival:
                     tram = UithofTrack.Trams.Where(x => x.id == Event.TramId).First();
                     Tram tramInFront = UithofTrack.Trams.Where(x => x.id == tram.inFrontId).First();
-                    if(!UithofTrack.Stops[tram.nextStation].Occupied 
+                    if(tram.nextStation == 17 || tram.nextStation == 8)
+                    {
+                        double CrossBlockedUntill = UithofTrack.CrossPRBlockedUntill;
+                        if(tram.nextStation == 17)
+                        {
+                            CrossBlockedUntill = UithofTrack.CrossCSBlockedUntill;
+                        }
+                        // if 0/9 and cross free go there
+                        if(!UithofTrack.Stops[(tram.nextStation+1)%18].Occupied && CrossBlockedUntill < curTime)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + (tram.nextStation+1)%18 + " at time " + curTime);
+                            UithofTrack.Stops[(tram.nextStation+1)%18].Occupied = true;
+                            if (tram.nextStation == 17)
+                            {
+                                UithofTrack.CrossCSBlockedUntill = curTime + 40;
+                            }
+                            else
+                            {
+                                UithofTrack.CrossPRBlockedUntill = curTime + 40;
+                            }
+                            Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
+                        }
+                        // if 17/8 free go there
+                        if(!UithofTrack.Stops[tram.nextStation].Occupied && CrossBlockedUntill < curTime)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + tram.nextStation + " at time " + curTime);
+                            UithofTrack.Stops[tram.nextStation].Occupied = true;
+                            if (tram.nextStation == 17)
+                            {
+                                UithofTrack.CrossCSBlockedUntill = curTime + 40;
+                            }
+                            else
+                            {
+                                UithofTrack.CrossPRBlockedUntill = curTime + 40;
+                            }
+                            Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
+                        }
+                        // hold otherwise
+                        else
+                        {
+                            Hold(EventType.ExpectedArival, tram.id);
+                        }
+                    }
+                    else if(!UithofTrack.Stops[tram.nextStation].Occupied 
                         && (tramInFront.nextStation != tram.nextStation || tramInFront.id == tram.id))
                     {
                         //TODO: 20 vervangen door goede waarde
                         if (UithofTrack.Stops[tram.nextStation].LastOccupied + 20 > curTime)
                         {
                             {
-                                Console.Out.WriteLine("Reschedule because within 20 sec");
+                                Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                                Console.Out.WriteLine("Reschedule tram " + tram.id + " because within 20 sec");
                                 Scheduler.EventQue.Add(UithofTrack.Stops[tram.nextStation].LastOccupied + 20, new Event()
                                 {
                                     TramId = tram.id,
@@ -48,9 +94,10 @@ namespace UithofTramLijn
                         }
                         else
                         {
+                            Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + tram.nextStation + " at time " + curTime);
                             UithofTrack.Stops[tram.nextStation].Occupied = true;
-                            Scheduler.scheduleEvent(EventType.Leaves, curTime, tram, false);
+                            Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
                     }
                     else
@@ -61,15 +108,20 @@ namespace UithofTramLijn
                 case EventType.ExpectedArivalAtCross:
                     break;
                 case EventType.ExpectedSpawn:
-                    if (!UithofTrack.Stops[8].Occupied)
+                    int station = 0;
+                    if (Event.SpawnAtPR)
+                    {
+                        station = 8;
+                    }
+                    if (!UithofTrack.Stops[station].Occupied)
                     {
                         int id = tramId++;
                         if (UithofTrack.Trams.Count() == 0)
                         {
-                            Tram cur = new Tram(id, 8, id, id);
+                            Tram cur = new Tram(id, station, id, id);
                             UithofTrack.Trams.Add(cur);
-                            UithofTrack.Stops[8].Occupied = true;
-                            Scheduler.scheduleEvent(EventType.Leaves, curTime, cur, false);
+                            UithofTrack.Stops[station].Occupied = true;
+                            Scheduler.scheduleEvent(EventType.Leaves, curTime, cur);
                         }
                         else
                         {
@@ -81,9 +133,9 @@ namespace UithofTramLijn
                             while (!done)
                             {
                                 candidate = UithofTrack.Trams.Where(x => x.id == candidate.behindId).First();
-                                if(bestNextStation > 8)
+                                if(bestNextStation > station)
                                 {
-                                    if(candidate.nextStation <= 8)
+                                    if(candidate.nextStation <= station)
                                     {
                                         done = true;
                                     }
@@ -95,7 +147,7 @@ namespace UithofTramLijn
                                 }
                                 else
                                 {
-                                    if (candidate.nextStation > 8)
+                                    if (candidate.nextStation > station)
                                     {
                                         best = candidate;
                                         bestNextStation = candidate.nextStation;
@@ -113,16 +165,17 @@ namespace UithofTramLijn
                                 i--;
                             }
                             Tram behind = UithofTrack.Trams.Where(x => x.id == best.behindId).First();
-                            Tram cur = new Tram(id, 8, best.id, behind.id);
+                            Tram cur = new Tram(id, station, best.id, behind.id);
                             behind.inFrontId = id;
                             best.behindId = id;
                             UithofTrack.Trams.Add(cur);
-                            UithofTrack.Stops[8].Occupied = true;
-                            Scheduler.scheduleEvent(EventType.Leaves, curTime, cur, false);
+                            UithofTrack.Stops[station].Occupied = true;
+                            Scheduler.scheduleEvent(EventType.Leaves, curTime, cur);
                         }
+                        Console.ForegroundColor = ConsoleColor.DarkYellow;
                         Console.Out.WriteLine("Tram " + id + " spawned!");
                     }
-                    else if(!UithofTrack.Stops[9].Occupied)
+                    else if(!UithofTrack.Stops[station+1].Occupied)
                     {
                         int id = tramId++;
                         Tram best = UithofTrack.Trams[0];
@@ -133,9 +186,9 @@ namespace UithofTramLijn
                         while (!done)
                         {
                             candidate = UithofTrack.Trams.Where(x => x.id == candidate.behindId).First();
-                            if (bestNextStation > 9)
+                            if (bestNextStation > station+1)
                             {
-                                if (candidate.nextStation <= 9)
+                                if (candidate.nextStation <= station+1)
                                 {
                                     done = true;
                                 }
@@ -147,7 +200,7 @@ namespace UithofTramLijn
                             }
                             else
                             {
-                                if (candidate.nextStation > 9)
+                                if (candidate.nextStation > station+1)
                                 {
                                     best = candidate;
                                     bestNextStation = candidate.nextStation;
@@ -165,54 +218,56 @@ namespace UithofTramLijn
                             i--;
                         }
                         Tram behind = UithofTrack.Trams.Where(x => x.id == best.behindId).First();
-                        Tram cur = new Tram(id, 9, best.id, behind.id);
+                        Tram cur = new Tram(id, station+1, best.id, behind.id);
                         behind.inFrontId = id;
                         best.behindId = id;
                         UithofTrack.Trams.Add(cur);
-                        UithofTrack.Stops[9].Occupied = true;
-                        Scheduler.scheduleEvent(EventType.Leaves, curTime, cur, false);
+                        UithofTrack.Stops[station+1].Occupied = true;
+                        Scheduler.scheduleEvent(EventType.Leaves, curTime, cur);
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.Out.WriteLine("Tram " + id + " spawned!");
                     }
                     else
                     {
+                        Console.ForegroundColor = ConsoleColor.DarkRed;
                         Console.Out.WriteLine("SPAWNHOLD");
                         Hold(EventType.ExpectedSpawn, 0);
                     }
                     break;
                 case EventType.Leaves:
                     tram = UithofTrack.Trams.Where(x => x.id == Event.TramId).First();
-                    Console.Out.WriteLine("Tram " + tram.id + " leaves station " + tram.nextStation);
-                    UithofTrack.Stops[tram.nextStation].Occupied = false;
-                    UithofTrack.Stops[tram.nextStation].LastOccupied = curTime;
-                    // Check holding trams
-                    bool doSomething = false;
-                    int doWithId = 0;
-                    Tram itemTram = null;
-                    foreach (Event item in onHold)
+                    if (tram.nextStation == 17 && curTime < UithofTrack.CrossCSBlockedUntill)
                     {
-                        itemTram = UithofTrack.Trams.Where(x => x.id == item.TramId).First();
-                        if (item.type == EventType.ExpectedArival 
-                            && itemTram.nextStation == tram.nextStation
-                            && tram.behindId == itemTram.id)
-                        {
-                            doWithId = onHold.IndexOf(item);
-                            doSomething = true;
-                            break;
-                        }
+                        Scheduler.EventQue.Add(UithofTrack.CrossCSBlockedUntill, Event);
                     }
-                    if (doSomething)
+                    else if (tram.nextStation == 8 && curTime < UithofTrack.CrossPRBlockedUntill)
                     {
-                        // TODO: DIE 20 ><
-                        Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
-                        onHold.RemoveAt(doWithId);
+                        Scheduler.EventQue.Add(UithofTrack.CrossPRBlockedUntill, Event);
                     }
                     else
                     {
+                        if (tram.nextStation == 17)
+                        {
+                            UithofTrack.CrossCSBlockedUntill = curTime + 40;
+                        }
+                        else if (tram.nextStation == 8)
+                        {
+                            UithofTrack.CrossPRBlockedUntill = curTime + 40;
+                        }
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Out.WriteLine("Tram " + tram.id + " leaves station " + tram.nextStation + " at " + curTime);
+                        UithofTrack.Stops[tram.nextStation].Occupied = false;
+                        UithofTrack.Stops[tram.nextStation].LastOccupied = curTime;
+                        // Check holding trams
+                        bool doSomething = false;
+                        int doWithId = 0;
+                        Tram itemTram = null;
                         foreach (Event item in onHold)
                         {
                             itemTram = UithofTrack.Trams.Where(x => x.id == item.TramId).First();
-                            if (item.type == EventType.ExpectedSpawn
-                                && tram.nextStation == 8 || tram.nextStation == 9)
+                            if (item.type == EventType.ExpectedArival
+                                && itemTram.nextStation == tram.nextStation
+                                && tram.behindId == itemTram.id)
                             {
                                 doWithId = onHold.IndexOf(item);
                                 doSomething = true;
@@ -221,26 +276,47 @@ namespace UithofTramLijn
                         }
                         if (doSomething)
                         {
+                            // TODO: DIE 20 ><
                             Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
                             onHold.RemoveAt(doWithId);
                         }
-                    }
-                    if (doSomething)
-                    {
-                        Console.Out.WriteLine("Hold opgeheven, nog " + onHold.Count + " in de lijst");
-                    }
+                        else
+                        {
+                            foreach (Event item in onHold)
+                            {
+                                itemTram = UithofTrack.Trams.Where(x => x.id == item.TramId).First();
+                                if (item.type == EventType.ExpectedSpawn
+                                    && tram.nextStation == 8 || tram.nextStation == 9)
+                                {
+                                    doWithId = onHold.IndexOf(item);
+                                    doSomething = true;
+                                    break;
+                                }
+                            }
+                            if (doSomething)
+                            {
+                                Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedSpawn, TramId = itemTram.id });
+                                onHold.RemoveAt(doWithId);
+                            }
+                        }
+                        if (doSomething)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Out.WriteLine("Hold opgeheven, nog " + onHold.Count + " in de lijst");
+                        }
 
-                    // makes tram go to correct station, always +1, 8=>10, 17=>1
-                    if (tram.nextStation == 8)
-                    {
+                        // makes tram go to correct station, always +1, 8=>10, 17=>1
+                        if (tram.nextStation == 8)
+                        {
+                            tram.nextStation++;
+                        }
+                        else if (tram.nextStation == 17)
+                        {
+                            tram.nextStation = 0;
+                        }
                         tram.nextStation++;
+                        Scheduler.scheduleEvent(EventType.ExpectedArival, curTime, tram);
                     }
-                    else if(tram.nextStation == 17)
-                    {
-                        tram.nextStation = 0;
-                    }
-                    tram.nextStation++;
-                    Scheduler.scheduleEvent(EventType.ExpectedArival, curTime, tram, false);
                     break;
                 case EventType.SimulationFinished:
                     Console.Out.WriteLine("sim end");
@@ -253,7 +329,8 @@ namespace UithofTramLijn
 
         internal void Hold(EventType type, int id)
         {
-            Console.Out.WriteLine("ONHOLD!");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.Out.WriteLine("Tram " + id + " staat op hold met type " + type);
             switch (type)
             {
                 case EventType.ExpectedArival:
