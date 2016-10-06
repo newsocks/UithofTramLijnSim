@@ -53,6 +53,10 @@ namespace UithofTramLijn
                     };
                 }
             }
+            for (int i = 0; i < 17; i++)
+            {
+                Stops[i].Name = Stops[i].Name + "(" + i + ")";
+            }
         }
     }
 }
