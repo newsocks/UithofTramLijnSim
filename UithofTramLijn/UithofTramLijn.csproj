@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsoleInterface.cs" />
     <Compile Include="EventHandler.cs" />
     <Compile Include="Scheduler.cs" />
     <Compile Include="Tram.cs" />
