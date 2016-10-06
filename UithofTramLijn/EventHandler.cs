@@ -431,7 +431,8 @@ namespace UithofTramLijn
                 default:
                     break;
             }
-            ConsoleInterface.storeEvent(Event, UithofTrack.Trams[Event.TramId].nextStation, curTime);
+
+            ConsoleInterface.storeEvent(Event, 0, curTime);
             return false;
         }
 
