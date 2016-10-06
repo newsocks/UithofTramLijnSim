@@ -13,7 +13,7 @@ namespace UithofTramLijn
         {
             UithofTrack uithofTrack = new UithofTrack();
             Scheduler scheduler = new Scheduler(uithofTrack, 15);
-            ConsoleInterface consoleinterface = new ConsoleInterface();
+            ConsoleInterface consoleinterface = new ConsoleInterface(uithofTrack);
             EventHandler eventhandler = new EventHandler(scheduler, uithofTrack, consoleinterface);
 
             bool end = false;
@@ -22,6 +22,9 @@ namespace UithofTramLijn
             {
                 end = eventhandler.HandleEvent();
             }
+
+            consoleinterface.consinter();
+
             Console.In.ReadLine();
         }
     }

@@ -31,7 +31,7 @@ namespace UithofTramLijn
                 ;
             }
             Event Event = next.Value;
-            ConsoleInterface.storeEvent(Event, curTime);
+            
             Tram tram;
             switch (Event.type)
             {
@@ -372,6 +372,7 @@ namespace UithofTramLijn
                 default:
                     break;
             }
+            ConsoleInterface.storeEvent(Event, UithofTrack.Trams[Event.TramId].nextStation, curTime);
             return false;
         }
 
