@@ -13,9 +13,13 @@ namespace UithofTramLijn
         UithofTrack uithofTrack;
         Queue<double> timeTablePR;
         Queue<double> timeTableCS;
+        int despawnAtCS;
+        int despawnAtPR;
+        int freq;
 
         public Scheduler(UithofTrack track, int freq)
         {
+            this.freq = freq;
             uithofTrack = track;
             scheduleEvent(EventType.SimulationFinished, 0, null);
             timeTablePR = new Queue<double>();
@@ -28,7 +32,7 @@ namespace UithofTramLijn
             {
                 timeTablePR.Enqueue(3600 + 60 * 60 * i / freq);
             }
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i <= 10; i++)
             {
                 timeTablePR.Enqueue(13 * 3600 + i * 900);
             }
@@ -47,9 +51,9 @@ namespace UithofTramLijn
                 timeTableCS.Enqueue(13 * 3600 + 300 + i * 900);
             }
             //spawn trams
-            EventQue.Add(0-60, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
-            EventQue.Add(300 - 60, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = false });
-            EventQue.Add(900 - 60, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
+            EventQue.Add(0-200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
+            EventQue.Add(300 - 200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = false });
+            EventQue.Add(900 - 200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
             int toSpawn = (int)Math.Ceiling(2.0 * freq / 3) - 3;
             double t = (5 + 60 / freq) % (60 / freq) * 60;
             List<int> timesCS = new List<int>();
@@ -74,13 +78,16 @@ namespace UithofTramLijn
             {
                 if(i%2 == 0)
                 {
-                    EventQue.Add(timesCS[i/2] - 60, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = false });
+                    EventQue.Add(timesCS[i/2] - 200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = false });
                 }
                 else
                 {
-                    EventQue.Add(timesPR[(i-1)/2] - 60, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
+                    EventQue.Add(timesPR[(i-1)/2] - 200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
                 }
             }
+            //despawn trams
+            despawnAtCS = toSpawn / 2; // round down
+            despawnAtPR = toSpawn - despawnAtCS; // round up
         }
 
         public void scheduleEvent(EventType type, double currentTime, Tram tram)
@@ -100,18 +107,45 @@ namespace UithofTramLijn
                     if((tram.nextStation == 0 || tram.nextStation == 17) && timeTableCS.Count > 0)
                     {
                         earliestLeave = timeTableCS.Dequeue();
+                        if (earliestLeave > 60 / freq * 60 + 13 * 3600 && despawnAtCS > 0)
+                        {
+                            despawnAtCS--;
+                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            break;
+                        }
                     }
                     else if ((tram.nextStation == 8 || tram.nextStation == 9) && timeTablePR.Count > 0)
                     {
                         earliestLeave = timeTablePR.Dequeue();
+                        if (earliestLeave > 13 * 3600 && despawnAtPR > 0)
+                        {
+                            despawnAtPR--;
+                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            break;
+                        }
                     }
                     if (tram.nextStation == 8 || tram.nextStation == 9 || tram.nextStation == 17 || tram.nextStation == 0)
                     {
-                        key = Math.Max(currentTime + 300, earliestLeave);
+                        if (earliestLeave == double.MinValue)
+                        {
+                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            break;
+                        }
+                        else if (currentTime + 180 > earliestLeave)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Out.WriteLine("TE LAAT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Out.WriteLine("OP TIJD :D:D:D:D:D:D:D::D:D:D:D:D:D:D:D:D:D:D:D:D::D:D:D:D:");
+                        }
+                        key = Math.Max(currentTime + 180, earliestLeave);
                     }
                     else
                     {
-                        key = Math.Max(currentTime + 20 + 40 * rand.NextDouble(), earliestLeave);
+                        key = Math.Max(currentTime + 12 + 2 * rand.NextDouble(), earliestLeave);
                     }
                     value = new Event() { type = EventType.Leaves, TramId = tram.id };
                     if(EventQue.ContainsKey(key))
@@ -138,7 +172,7 @@ namespace UithofTramLijn
         }
     }
 
-    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished }
+    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished, Despawn }
 
     public struct Event
     {

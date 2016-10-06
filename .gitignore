@@ -5,3 +5,10 @@
 *.o
 *.so
 *.pbd
+UithofTramLijn/bin/Debug/UithofTramLijn.pdb
+*.exe
+UithofTramLijn/obj/Debug/UithofTramLijn.pdb
+*.exe
+UithofTramLijn/bin/Debug/UithofTramLijn.exe
+*.suo
+UithofTramLijn/bin/Debug/UithofTramLijn.pdb

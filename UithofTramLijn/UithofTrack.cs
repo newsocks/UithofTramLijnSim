@@ -26,7 +26,7 @@ namespace UithofTramLijn
             String[] StopNames = new String[9] { "Centraal Station", "Vaartse Rijn", "Galgenwaard",
                                            "Kromme Rijn", "Padualaan", "Heidelberglaan", "UMC",
                                            "WKZ", "P&R De Uithof" };
-            double[] StopTravalTime = new double[18] { 0, 134, 243, 59, 101, 60, 86, 78, 113, 0, 110, 78, 82, 60, 100, 59, 243, 135 };
+            double[] StopTravalTime = new double[18] { 134, 243, 59, 101, 60, 86, 78, 113, 110, 110, 78, 82, 60, 100, 59, 243, 135, 134 };
 
             for (int i = 0; i < 18; i++)
             {
@@ -52,6 +52,10 @@ namespace UithofTramLijn
                         LastOccupied = -21,
                     };
                 }
+            }
+            for (int i = 0; i < 17; i++)
+            {
+                Stops[i].Name = Stops[i].Name + "(" + i + ")";
             }
         }
     }
