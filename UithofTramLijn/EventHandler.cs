@@ -28,7 +28,7 @@ namespace UithofTramLijn
             double curTime = next.Key;
             Event Event = next.Value;
             Tram tram, tramInFront;
-            ConsoleInterface.storeEvent(Event, curTime);
+            
             switch (Event.type)
             {
                 case EventType.PassengerSpawn:
@@ -436,6 +436,8 @@ namespace UithofTramLijn
                 default:
                     break;
             }
+
+            ConsoleInterface.storeEvent(Event, 0, curTime);
             return false;
         }
 
