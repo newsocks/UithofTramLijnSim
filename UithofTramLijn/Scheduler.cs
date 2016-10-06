@@ -9,7 +9,7 @@ namespace UithofTramLijn
     class Scheduler
     {
         public SortedList<double, Event> EventQue = new SortedList<double, Event>();
-        Random rand = new Random();
+        public Random rand = new Random();
         UithofTrack uithofTrack;
         Queue<double> timeTablePR;
         Queue<double> timeTableCS;
@@ -88,6 +88,12 @@ namespace UithofTramLijn
             //despawn trams
             despawnAtCS = toSpawn / 2; // round down
             despawnAtPR = toSpawn - despawnAtCS; // round up
+            // spawn humans
+            for (int i = 0; i < 18; i++)
+            {
+                double timeUntilNext = (-Math.Log(rand.NextDouble()) / track.Stops[i].ArrivalRate[0]);
+                EventQue.Add(timeUntilNext, new Event() { type = EventType.PassengerSpawn, SpawnStation = i });
+            }
         }
 
         public void scheduleEvent(EventType type, double currentTime, Tram tram)
@@ -97,7 +103,11 @@ namespace UithofTramLijn
             switch (type)
             {
                 case EventType.ExpectedArival:
-                    key = currentTime + uithofTrack.Stops[tram.nextStation].TravelTime;
+                    double rng = rand.NextDouble();
+                    double rng2 = rand.NextDouble();
+                    double traveltime = uithofTrack.Stops[tram.nextStation].TravelTime + 0.125*uithofTrack.Stops[tram.nextStation].TravelTime
+                        * Math.Sqrt(-2.0 * Math.Log(rng)) * Math.Sin(2.0 * Math.PI * rng2);
+                    key = currentTime + traveltime;
                     value = new Event() { type = EventType.ExpectedArival, TramId = tram.id };
                     EventQue.Add(key, value);
                     break;
@@ -131,7 +141,7 @@ namespace UithofTramLijn
                             EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
                             break;
                         }
-                        else if (currentTime + 180 > earliestLeave)
+                        else if (currentTime + 180 > earliestLeave + 60)
                         {
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Out.WriteLine("TE LAAT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
@@ -172,12 +182,13 @@ namespace UithofTramLijn
         }
     }
 
-    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished, Despawn }
+    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished, Despawn, PassengerSpawn }
 
     public struct Event
     {
         public EventType type;
         public int TramId;
         public bool SpawnAtPR;
+        public int SpawnStation;
     }
 }

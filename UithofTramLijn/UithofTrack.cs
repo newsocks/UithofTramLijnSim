@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,10 +20,14 @@ namespace UithofTramLijn
             public double TravelTime;
             public bool Occupied;
             public double LastOccupied;
+            public List<double> WaitingPassengers;
+            public double[] ArrivalRate;
+            public double[] departureQuotent;
         }
 
         public UithofTrack()
         {
+            StreamReader reader = new StreamReader("input-data-passengers.csv");
             String[] StopNames = new String[9] { "Centraal Station", "Vaartse Rijn", "Galgenwaard",
                                            "Kromme Rijn", "Padualaan", "Heidelberglaan", "UMC",
                                            "WKZ", "P&R De Uithof" };
@@ -39,6 +44,7 @@ namespace UithofTramLijn
                         TravelTime = StopTravalTime[i],
                         Occupied = false,
                         LastOccupied = -21,
+                        WaitingPassengers = new List<double>(),
                     };
                 }
                 else
@@ -50,7 +56,21 @@ namespace UithofTramLijn
                         TravelTime = StopTravalTime[i],
                         Occupied = false,
                         LastOccupied = -21,
+                        WaitingPassengers = new List<double>(),
                     };
+                }
+                Stops[i].ArrivalRate = new double[64];
+                Stops[i].departureQuotent = new double[64];
+                string[] arr = reader.ReadLine().Split(new char[] { ';' });
+                int counter = 0;
+                for (int j = 0; j < arr.Length; j+=3)
+                {
+                    for (int k = 0; k < int.Parse(arr[j+2]); k++)
+                    {
+                        Stops[i].ArrivalRate[counter] = double.Parse(arr[j]);
+                        Stops[i].departureQuotent[counter] = double.Parse(arr[j + 1]);
+                        counter++;
+                    }
                 }
             }
             for (int i = 0; i < 17; i++)
