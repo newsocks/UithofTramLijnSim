@@ -10,13 +10,15 @@ namespace UithofTramLijn
     {
         Scheduler Scheduler;
         UithofTrack UithofTrack;
+        ConsoleInterface ConsoleInterface;
         int tramId;
         public List<Event> onHold = new List<Event>();
 
-        public EventHandler(Scheduler Scheduler, UithofTrack track)
+        public EventHandler(Scheduler Scheduler, UithofTrack track, ConsoleInterface consoleInterface)
         {
             this.Scheduler = Scheduler;
             UithofTrack = track;
+            ConsoleInterface = consoleInterface;
             tramId = 0;
         }
 
@@ -25,7 +27,12 @@ namespace UithofTramLijn
             var next = Scheduler.getNextEvent();
             double curTime = next.Key;
             Event Event = next.Value;
+<<<<<<< HEAD
             Tram tram, tramInFront;
+=======
+            ConsoleInterface.storeEvent(Event, curTime);
+            Tram tram;
+>>>>>>> origin/master
             switch (Event.type)
             {
                 case EventType.Despawn:

@@ -1,0 +1,11 @@
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.pbd
+UithofTramLijn/bin/Debug/UithofTramLijn.pdb
+*.exe
+UithofTramLijn/obj/Debug/UithofTramLijn.pdb
+*.exe
