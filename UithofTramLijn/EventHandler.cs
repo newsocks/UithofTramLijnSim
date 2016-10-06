@@ -24,6 +24,10 @@ namespace UithofTramLijn
         {
             var next = Scheduler.getNextEvent();
             double curTime = next.Key;
+            if (curTime > 2700)
+            {
+                ;
+            }
             Event Event = next.Value;
             Tram tram;
             switch (Event.type)
@@ -39,7 +43,7 @@ namespace UithofTramLijn
                             CrossBlockedUntill = UithofTrack.CrossCSBlockedUntill;
                         }
                         // if 0/9 and cross free go there
-                        if(!UithofTrack.Stops[(tram.nextStation+1)%18].Occupied && CrossBlockedUntill < curTime)
+                        if(!UithofTrack.Stops[(tram.nextStation+1)%18].Occupied && CrossBlockedUntill <= curTime)
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + (tram.nextStation+1)%18 + " at time " + curTime);
@@ -55,7 +59,7 @@ namespace UithofTramLijn
                             Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
                         // if 17/8 free go there
-                        if(!UithofTrack.Stops[tram.nextStation].Occupied && CrossBlockedUntill < curTime)
+                        else if(!UithofTrack.Stops[tram.nextStation].Occupied && CrossBlockedUntill <= curTime)
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + tram.nextStation + " at time " + curTime);
@@ -70,7 +74,11 @@ namespace UithofTramLijn
                             }
                             Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
-                        // hold otherwise
+                        // reschedule otherwise
+                        else if (!UithofTrack.Stops[tram.nextStation].Occupied || !UithofTrack.Stops[(tram.nextStation + 1) % 18].Occupied)
+                        {
+                            Scheduler.EventQue.Add(CrossBlockedUntill, Event);
+                        }
                         else
                         {
                             Hold(EventType.ExpectedArival, tram.id);
@@ -265,8 +273,8 @@ namespace UithofTramLijn
                         foreach (Event item in onHold)
                         {
                             itemTram = UithofTrack.Trams.Where(x => x.id == item.TramId).First();
-                            if (item.type == EventType.ExpectedArival
-                                && itemTram.nextStation == tram.nextStation
+                            if(item.type == EventType.ExpectedArival
+                                && legalNextstation(itemTram, tram)
                                 && tram.behindId == itemTram.id)
                             {
                                 doWithId = onHold.IndexOf(item);
@@ -274,10 +282,35 @@ namespace UithofTramLijn
                                 break;
                             }
                         }
+                        if (!doSomething)
+                        {
+                            foreach (Event item in onHold)
+                            {
+                                itemTram = UithofTrack.Trams.Where(x => x.id == item.TramId).First();
+                                if (item.type == EventType.ExpectedArival
+                                    && legalNextstation(itemTram, tram))
+                                {
+                                    doWithId = onHold.IndexOf(item);
+                                    doSomething = true;
+                                    break;
+                                }
+                            }
+                        }
                         if (doSomething)
                         {
+                            if(tram.nextStation == 8 || tram.nextStation == 9)
+                            {
+                                Scheduler.EventQue.Add(UithofTrack.CrossPRBlockedUntill, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
+                            }
+                            else if (tram.nextStation == 17 || tram.nextStation == 0)
+                            {
+                                Scheduler.EventQue.Add(UithofTrack.CrossCSBlockedUntill, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
+                            }
+                            else
+                            {
+                                Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
+                            }
                             // TODO: DIE 20 ><
-                            Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedArival, TramId = itemTram.id });
                             onHold.RemoveAt(doWithId);
                         }
                         else
@@ -323,6 +356,25 @@ namespace UithofTramLijn
                     return true;
                 default:
                     break;
+            }
+            return false;
+        }
+
+        private bool legalNextstation(Tram holding, Tram leaving)
+        {
+            if (leaving.nextStation == holding.nextStation && leaving.behindId == holding.id)
+            {
+                return true;
+            }
+            if (leaving.nextStation == 9 && holding.nextStation == 8 &&
+                (leaving.behindId == holding.id || leaving.behindId == holding.inFrontId))
+            {
+                return true;
+            }
+            if (leaving.nextStation == 0 && holding.nextStation == 17 &&
+                 (leaving.behindId == holding.id || leaving.behindId == holding.inFrontId))
+            {
+                return true;
             }
             return false;
         }
