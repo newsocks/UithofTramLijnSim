@@ -105,7 +105,14 @@ namespace UithofTramLijn
                     {
                         earliestLeave = timeTablePR.Dequeue();
                     }
-                    key = Math.Max(currentTime + 20 + 40 * rand.NextDouble(), earliestLeave);
+                    if (tram.nextStation == 8 || tram.nextStation == 9 || tram.nextStation == 17 || tram.nextStation == 0)
+                    {
+                        key = Math.Max(currentTime + 300, earliestLeave);
+                    }
+                    else
+                    {
+                        key = Math.Max(currentTime + 20 + 40 * rand.NextDouble(), earliestLeave);
+                    }
                     value = new Event() { type = EventType.Leaves, TramId = tram.id };
                     if(EventQue.ContainsKey(key))
                     {

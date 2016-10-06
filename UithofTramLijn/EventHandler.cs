@@ -50,6 +50,7 @@ namespace UithofTramLijn
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + (tram.nextStation+1)%18 + " at time " + curTime);
+                            tram.crossedOver = true;
                             UithofTrack.Stops[(tram.nextStation+1)%18].Occupied = true;
                             if (tram.nextStation == 17)
                             {
@@ -247,13 +248,13 @@ namespace UithofTramLijn
                     break;
                 case EventType.Leaves:
                     tram = UithofTrack.Trams.Where(x => x.id == Event.TramId).First();
-                    if (tram.nextStation == 17 && curTime < UithofTrack.CrossCSBlockedUntill)
+                    if (tram.nextStation == 17 && curTime +0.0001 < UithofTrack.CrossCSBlockedUntill)
                     {
-                        Scheduler.EventQue.Add(UithofTrack.CrossCSBlockedUntill, Event);
+                        Scheduler.EventQue.Add(UithofTrack.CrossCSBlockedUntill-0.0000000001, Event);
                     }
-                    else if (tram.nextStation == 8 && curTime < UithofTrack.CrossPRBlockedUntill)
+                    else if (tram.nextStation == 8 && curTime + 0.0001 < UithofTrack.CrossPRBlockedUntill)
                     {
-                        Scheduler.EventQue.Add(UithofTrack.CrossPRBlockedUntill, Event);
+                        Scheduler.EventQue.Add(UithofTrack.CrossPRBlockedUntill-0.0000000001, Event);
                     }
                     else
                     {
@@ -266,9 +267,20 @@ namespace UithofTramLijn
                             UithofTrack.CrossPRBlockedUntill = curTime + 40;
                         }
                         Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.Out.WriteLine("Tram " + tram.id + " leaves station " + tram.nextStation + " at " + curTime);
-                        UithofTrack.Stops[tram.nextStation].Occupied = false;
-                        UithofTrack.Stops[tram.nextStation].LastOccupied = curTime;
+                        // if 9/0
+                        if (tram.crossedOver)
+                        {
+                            tram.crossedOver = false;
+                            Console.Out.WriteLine("Tram " + tram.id + " leaves station " + (tram.nextStation+1)%18 + " at " + curTime);
+                            UithofTrack.Stops[(tram.nextStation+1)%18].Occupied = false;
+                            UithofTrack.Stops[(tram.nextStation+1)%18].LastOccupied = curTime;
+                        }
+                        else
+                        {
+                            Console.Out.WriteLine("Tram " + tram.id + " leaves station " + tram.nextStation + " at " + curTime);
+                            UithofTrack.Stops[tram.nextStation].Occupied = false;
+                            UithofTrack.Stops[tram.nextStation].LastOccupied = curTime;
+                        }
                         // Check holding trams
                         bool doSomething = false;
                         int doWithId = 0;
