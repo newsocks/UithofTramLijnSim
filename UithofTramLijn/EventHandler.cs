@@ -27,12 +27,8 @@ namespace UithofTramLijn
             var next = Scheduler.getNextEvent();
             double curTime = next.Key;
             Event Event = next.Value;
-<<<<<<< HEAD
             Tram tram, tramInFront;
-=======
             ConsoleInterface.storeEvent(Event, curTime);
-            Tram tram;
->>>>>>> origin/master
             switch (Event.type)
             {
                 case EventType.Despawn:

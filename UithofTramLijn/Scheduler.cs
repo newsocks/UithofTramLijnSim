@@ -110,7 +110,7 @@ namespace UithofTramLijn
                         if (earliestLeave > 60 / freq * 60 + 13 * 3600 && despawnAtCS > 0)
                         {
                             despawnAtCS--;
-                            EventQue.Add(currentTime, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
                             break;
                         }
                     }
@@ -120,7 +120,7 @@ namespace UithofTramLijn
                         if (earliestLeave > 13 * 3600 && despawnAtPR > 0)
                         {
                             despawnAtPR--;
-                            EventQue.Add(currentTime, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
                             break;
                         }
                     }
@@ -128,7 +128,7 @@ namespace UithofTramLijn
                     {
                         if (earliestLeave == double.MinValue)
                         {
-                            EventQue.Add(currentTime, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
                             break;
                         }
                         else if (currentTime + 180 > earliestLeave)
