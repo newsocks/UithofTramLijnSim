@@ -97,6 +97,10 @@ namespace UithofTramLijn
 
         public void scheduleEvent(EventType type, double currentTime, Tram tram)
         {
+            if (currentTime > 28000)
+            {
+                ;
+            }
             double key;
             Event value;
             switch (type)
@@ -154,7 +158,7 @@ namespace UithofTramLijn
                     }
                     else
                     {
-                        key = Math.Max(currentTime + 12 + 2 * rand.NextDouble(), earliestLeave);
+                        key = Math.Max(currentTime + 12.5 + 0.22*tram.entering + 0.13*tram.exiting, earliestLeave);
                     }
                     value = new Event() { type = EventType.Leaves, TramId = tram.id };
                     if(EventQue.ContainsKey(key))
@@ -162,8 +166,6 @@ namespace UithofTramLijn
                         key += 0.000000000001;
                     }
                     EventQue.Add(key, value);
-                    break;
-                case EventType.ExpectedArivalAtCross:
                     break;
                 case EventType.SimulationFinished:
                     EventQue.Add(16*3600, new Event() { type = EventType.SimulationFinished });
@@ -181,7 +183,7 @@ namespace UithofTramLijn
         }
     }
 
-    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished, Despawn, PassengerSpawn, PassengerSpawnReset }
+    public enum EventType { ExpectedArival, Leaves, ExpectedSpawn, SimulationFinished, Despawn, PassengerSpawn, PassengerSpawnReset }
 
     public struct Event
     {

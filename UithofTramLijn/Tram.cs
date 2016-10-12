@@ -14,6 +14,8 @@ namespace UithofTramLijn
         public int inFrontId;
         public int behindId;
         public bool crossedOver;
+        public int entering;
+        public int exiting;
 
         public Tram(int id, int next, int inFrontId, int behindId)
         {

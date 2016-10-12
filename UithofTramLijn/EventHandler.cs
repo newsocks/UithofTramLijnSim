@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace UithofTramLijn
@@ -13,6 +14,8 @@ namespace UithofTramLijn
         ConsoleInterface ConsoleInterface;
         int tramId;
         public List<Event> onHold = new List<Event>();
+        StreamWriter PRwriter = new StreamWriter("PRwaitingtimes.txt");
+        StreamWriter CSwriter = new StreamWriter("CSwaitingtimes.txt");
 
         public EventHandler(Scheduler Scheduler, UithofTrack track, ConsoleInterface consoleInterface)
         {
@@ -35,9 +38,9 @@ namespace UithofTramLijn
                 case EventType.PassengerSpawnReset:
                     for (int i = 0; i < 18; i++)
                     {
-                        if (UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime /900] != 0)
+                        if (UithofTrack.Stops[i].ArrivalRate[(int)curTime /900] != 0)
                         {
-                            timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime / 900]);
+                            timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[i].ArrivalRate[(int)curTime / 900]);
                             if (timeUntilNext < 900)
                             {
                                 Scheduler.EventQue.Add(curTime + timeUntilNext, new Event() { type = EventType.PassengerSpawn, SpawnStation = i });
@@ -99,6 +102,7 @@ namespace UithofTramLijn
                             {
                                 UithofTrack.CrossPRBlockedUntill = curTime + 40;
                             }
+                            loadPassengers(tram, curTime);
                             Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
                         // if 17/8 free go there
@@ -115,6 +119,7 @@ namespace UithofTramLijn
                             {
                                 UithofTrack.CrossPRBlockedUntill = curTime + 40;
                             }
+                            loadPassengers(tram, curTime);
                             Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
                         // reschedule otherwise
@@ -162,6 +167,7 @@ namespace UithofTramLijn
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Out.WriteLine("Tram " + tram.id + " arrived at station " + UithofTrack.Stops[tram.nextStation].Name + " at time " + curTime);
                             UithofTrack.Stops[tram.nextStation].Occupied = true;
+                            loadPassengers(tram, curTime);
                             Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
                     }
@@ -169,8 +175,6 @@ namespace UithofTramLijn
                     {
                         Hold(EventType.ExpectedArival, tram.id);
                     }
-                    break;
-                case EventType.ExpectedArivalAtCross:
                     break;
                 case EventType.ExpectedSpawn:
                     int station = 0;
@@ -448,6 +452,8 @@ namespace UithofTramLijn
                     }
                     break;
                 case EventType.SimulationFinished:
+                    PRwriter.Close();
+                    CSwriter.Close();
                     Console.Out.WriteLine("sim end");
                     return true;
                 default:
@@ -456,6 +462,133 @@ namespace UithofTramLijn
 
             ConsoleInterface.storeEvent(Event, 0, curTime);
             return false;
+        }
+
+        private void loadPassengers(Tram tram, double curTime)
+        {
+            int toLoad = UithofTrack.Stops[tram.nextStation].WaitingPassengers.Count;
+            if (tram.exitingPassengers.Sum() + toLoad > 420)
+            {
+                toLoad = 420 - tram.exitingPassengers.Sum();
+                for (int i = 0; i < toLoad; i++)
+                {
+                    if (tram.nextStation == 17)
+                    {
+                        CSwriter.WriteLine(curTime - UithofTrack.Stops[tram.nextStation].WaitingPassengers[0]);
+                    }
+                    else if (tram.nextStation == 8)
+                    {
+                        PRwriter.WriteLine(curTime - UithofTrack.Stops[tram.nextStation].WaitingPassengers[0]);
+                    }
+                    UithofTrack.Stops[tram.nextStation].WaitingPassengers.RemoveAt(0);
+                }
+            }
+            else
+            {
+                if (tram.nextStation == 17)
+                {
+                    for (int i = 0; i < UithofTrack.Stops[tram.nextStation].WaitingPassengers.Count; i++)
+                    {
+                        CSwriter.WriteLine(curTime - UithofTrack.Stops[tram.nextStation].WaitingPassengers[i]);
+                    }
+                }
+                else if (tram.nextStation == 8)
+                {
+                    for (int i = 0; i < UithofTrack.Stops[tram.nextStation].WaitingPassengers.Count; i++)
+                    {
+                        PRwriter.WriteLine(curTime - UithofTrack.Stops[tram.nextStation].WaitingPassengers[i]);
+                    }
+                }
+                UithofTrack.Stops[tram.nextStation].WaitingPassengers = new List<double>();
+            }
+            tram.exiting = tram.exitingPassengers[tram.nextStation];
+            tram.exitingPassengers[tram.nextStation] = 0;
+            int j = tram.nextStation + 1;
+            if (tram.nextStation == 8)
+            {
+                j++;
+                toLoad = handle(tram, 9, toLoad, curTime);
+            }
+            else if (tram.nextStation == 9)
+            {
+                toLoad = handle(tram, 8, toLoad, curTime);
+                tram.exiting += tram.exitingPassengers[8];
+                tram.exitingPassengers[8] = 0;
+            }
+            else if (tram.nextStation == 17)
+            {
+                j = 1;
+                toLoad = handle(tram, 0, toLoad, curTime);
+            }
+            else if (tram.nextStation == 0)
+            {
+                toLoad = handle(tram, 17, toLoad, curTime);
+                tram.exiting += tram.exitingPassengers[17];
+                tram.exitingPassengers[17] = 0;
+            }
+            tram.entering = toLoad;
+            double totalUnload = 0;
+            for (int k = j; k != 18 && k != 9; k++)
+            {
+                totalUnload += UithofTrack.Stops[k].departureQuotent[(int)curTime / 900];
+            }
+            for (int i = 0; i < toLoad; i++)
+            {
+                double rng = Scheduler.rand.NextDouble() * totalUnload;
+                for (int k = j; true; k++)
+                {
+                    if (rng < UithofTrack.Stops[k].departureQuotent[(int)curTime / 900])
+                    {
+                        tram.exitingPassengers[k]++;
+                        break;
+                    }
+                    else
+                    {
+                        rng -= UithofTrack.Stops[k].departureQuotent[(int)curTime / 900];
+                    }
+                }
+            }
+        }
+
+        private int handle(Tram tram, int station, int toLoad, double curTime)
+        {
+            toLoad = UithofTrack.Stops[station].WaitingPassengers.Count;
+            if (tram.exitingPassengers.Sum() + toLoad > 420)
+            {
+                toLoad = 420 - tram.exitingPassengers.Sum();
+                int count = UithofTrack.Stops[station].WaitingPassengers.Count;
+                for (int i = 0; i < 420 - tram.exitingPassengers.Sum() - toLoad + count; i++)
+                {
+                    if (station == 17 || station == 0)
+                    {
+                        CSwriter.WriteLine(curTime - UithofTrack.Stops[station].WaitingPassengers[0]);
+                    }
+                    else if (station == 8 || station == 9)
+                    {
+                        PRwriter.WriteLine(curTime - UithofTrack.Stops[station].WaitingPassengers[0]);
+                    }
+                    UithofTrack.Stops[station].WaitingPassengers.RemoveAt(0);
+                }
+            }
+            else
+            {
+                if (station == 17 || station == 0)
+                {
+                    for (int i = 0; i < UithofTrack.Stops[station].WaitingPassengers.Count; i++)
+                    {
+                        CSwriter.WriteLine(curTime - UithofTrack.Stops[station].WaitingPassengers[i]);
+                    }
+                }
+                else if (station == 8 || station == 9)
+                {
+                    for (int i = 0; i < UithofTrack.Stops[station].WaitingPassengers.Count; i++)
+                    {
+                        PRwriter.WriteLine(curTime - UithofTrack.Stops[station].WaitingPassengers[i]);
+                    }
+                }
+                UithofTrack.Stops[station].WaitingPassengers = new List<double>();
+            }
+            return toLoad;
         }
 
         private bool legalNextstation(Tram holding, Tram leaving)
@@ -487,8 +620,6 @@ namespace UithofTramLijn
                     onHold.Add(new Event() { type = type, TramId = id });
                     break;
                 case EventType.Leaves:
-                    break;
-                case EventType.ExpectedArivalAtCross:
                     break;
                 case EventType.ExpectedSpawn:
                     onHold.Add(new Event() { type = EventType.ExpectedSpawn });
