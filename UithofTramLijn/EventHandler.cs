@@ -26,17 +26,32 @@ namespace UithofTramLijn
         {
             var next = Scheduler.getNextEvent();
             double curTime = next.Key;
+            double timeUntilNext;
             Event Event = next.Value;
             Tram tram, tramInFront;
             
             switch (Event.type)
             {
                 case EventType.PassengerSpawnReset:
+                    for (int i = 0; i < 18; i++)
+                    {
+                        if (UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime /900] != 0)
+                        {
+                            timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime / 900]);
+                            if (timeUntilNext < 900)
+                            {
+                                Scheduler.EventQue.Add(curTime + timeUntilNext, new Event() { type = EventType.PassengerSpawn, SpawnStation = i });
+                            }
+                        }
+                    }
                     break;
                 case EventType.PassengerSpawn:
                     UithofTrack.Stops[Event.SpawnStation].WaitingPassengers.Add(curTime);
-                    //double timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime / 900]);
-                    //Scheduler.EventQue.Add(curTime + timeUntilNext, Event);
+                    timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime / 900]);
+                    if((int)(curTime + timeUntilNext)/900 == (int)curTime/900)
+                    {
+                        Scheduler.EventQue.Add(curTime + timeUntilNext, Event);
+                    }
                     break;
                 case EventType.Despawn:
                     tram = UithofTrack.Trams.Where(x => x.id == Event.TramId).First();

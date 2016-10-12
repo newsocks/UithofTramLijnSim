@@ -91,7 +91,7 @@ namespace UithofTramLijn
             // schedule resets
             for (int i = 0; i < 64; i++)
             {
-                EventQue.Add(i * 900, new Event() { type = EventType.PassengerSpawnReset });
+                EventQue.Add(i * 900-0.0001, new Event() { type = EventType.PassengerSpawnReset });
             }
         }
 
