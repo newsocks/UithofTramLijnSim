@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -67,8 +68,8 @@ namespace UithofTramLijn
                 {
                     for (int k = 0; k < int.Parse(arr[j+2]); k++)
                     {
-                        Stops[i].ArrivalRate[counter] = double.Parse(arr[j]);
-                        Stops[i].departureQuotent[counter] = double.Parse(arr[j + 1]);
+                        Stops[i].ArrivalRate[counter] = double.Parse(arr[j], new CultureInfo("nl"));
+                        Stops[i].departureQuotent[counter] = double.Parse(arr[j + 1], new CultureInfo("nl"));
                         counter++;
                     }
                 }
