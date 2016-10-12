@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,6 +17,8 @@ namespace UithofTramLijn
         int despawnAtCS;
         int despawnAtPR;
         int freq;
+        public StreamWriter delayCSWriter = new StreamWriter("PunctualityCS.txt");
+        public StreamWriter delayPRWriter = new StreamWriter("PunctualityPR.txt");
 
         public Scheduler(UithofTrack track, int freq)
         {
@@ -32,7 +35,7 @@ namespace UithofTramLijn
             {
                 timeTablePR.Enqueue(3600 + 60 * 60 * i / freq);
             }
-            for (int i = 0; i <= 10; i++)
+            for (int i = 0; i < 10; i++)
             {
                 timeTablePR.Enqueue(13 * 3600 + i * 900);
             }
@@ -54,7 +57,7 @@ namespace UithofTramLijn
             EventQue.Add(0-200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
             EventQue.Add(300 - 200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = false });
             EventQue.Add(900 - 200, new Event() { type = EventType.ExpectedSpawn, SpawnAtPR = true });
-            int toSpawn = (int)Math.Ceiling(2.0 * freq / 3) - 3;
+            int toSpawn = (int)Math.Ceiling(2.0 * (double)freq / 3.0) - 3;
             double t = (5 + 60 / freq) % (60 / freq) * 60;
             List<int> timesCS = new List<int>();
             List<int> timesPR = new List<int>();
@@ -86,8 +89,16 @@ namespace UithofTramLijn
                 }
             }
             //despawn trams
-            despawnAtCS = toSpawn / 2; // round down
-            despawnAtPR = toSpawn - despawnAtCS; // round up
+            if (freq%2 == 0)
+            {
+                despawnAtPR = toSpawn / 2; // round down
+                despawnAtCS = toSpawn - despawnAtCS; // round up
+            }
+            else
+            {
+                despawnAtCS = toSpawn / 2; // round down
+                despawnAtPR = toSpawn - despawnAtCS; // round up
+            }
             // schedule resets
             for (int i = 0; i < 64; i++)
             {
@@ -133,12 +144,20 @@ namespace UithofTramLijn
                         if (earliestLeave > 13 * 3600 && despawnAtPR > 0)
                         {
                             despawnAtPR--;
-                            EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });
+                            EventQue.Add(currentTime+0.00000001, new Event() { TramId = tram.id, type = EventType.Despawn });
                             break;
                         }
                     }
                     if (tram.nextStation == 8 || tram.nextStation == 9 || tram.nextStation == 17 || tram.nextStation == 0)
                     {
+                        if ((tram.nextStation == 8 || tram.nextStation == 9) && earliestLeave != double.MinValue)
+                        {
+                            delayPRWriter.WriteLine(Math.Max(0, currentTime - earliestLeave + 180) + "curtime = " + (currentTime+180) + " timetable: " + earliestLeave);
+                        }
+                        else if ((tram.nextStation == 17 || tram.nextStation == 0) && earliestLeave != double.MinValue)
+                        {
+                            delayCSWriter.WriteLine(Math.Max(0, currentTime - earliestLeave + 180) + "curtime = " + (currentTime+180) + " timetable: " + earliestLeave);
+                        }
                         if (earliestLeave == double.MinValue)
                         {
                             EventQue.Add(currentTime+0.0000001, new Event() { TramId = tram.id, type = EventType.Despawn });

@@ -105,7 +105,7 @@ namespace UithofTramLijn
                             loadPassengers(tram, curTime);
                             Scheduler.scheduleEvent(EventType.Leaves, curTime, tram);
                         }
-                        // if 17/8 free go there
+                        // if 17/8 free go there and cross free
                         else if(!UithofTrack.Stops[tram.nextStation].Occupied && CrossBlockedUntill <= curTime + 0.000001)
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
@@ -426,7 +426,7 @@ namespace UithofTramLijn
                                     break;
                                 }
                             }
-                            if (doSomething)
+                            if (doSomething && !Scheduler.EventQue.ContainsKey(curTime + 20))
                             {
                                 Scheduler.EventQue.Add(curTime + 20, new Event() { type = EventType.ExpectedSpawn, TramId = itemTram.id });
                                 onHold.RemoveAt(doWithId);
@@ -454,6 +454,8 @@ namespace UithofTramLijn
                 case EventType.SimulationFinished:
                     PRwriter.Close();
                     CSwriter.Close();
+                    Scheduler.delayCSWriter.Close();
+                    Scheduler.delayPRWriter.Close();
                     Console.Out.WriteLine("sim end");
                     return true;
                 default:

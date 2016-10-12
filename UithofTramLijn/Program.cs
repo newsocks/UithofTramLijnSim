@@ -12,7 +12,7 @@ namespace UithofTramLijn
         static void Main(string[] args)
         {
             UithofTrack uithofTrack = new UithofTrack();
-            Scheduler scheduler = new Scheduler(uithofTrack, 15);
+            Scheduler scheduler = new Scheduler(uithofTrack, 20);
             ConsoleInterface consoleinterface = new ConsoleInterface(uithofTrack);
             EventHandler eventhandler = new EventHandler(scheduler, uithofTrack, consoleinterface);
 
