@@ -88,11 +88,10 @@ namespace UithofTramLijn
             //despawn trams
             despawnAtCS = toSpawn / 2; // round down
             despawnAtPR = toSpawn - despawnAtCS; // round up
-            // spawn humans
-            for (int i = 0; i < 18; i++)
+            // schedule resets
+            for (int i = 0; i < 64; i++)
             {
-                double timeUntilNext = (-Math.Log(rand.NextDouble()) / track.Stops[i].ArrivalRate[0]);
-                EventQue.Add(timeUntilNext, new Event() { type = EventType.PassengerSpawn, SpawnStation = i });
+                EventQue.Add(i * 900, new Event() { type = EventType.PassengerSpawnReset });
             }
         }
 
@@ -182,7 +181,7 @@ namespace UithofTramLijn
         }
     }
 
-    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished, Despawn, PassengerSpawn }
+    public enum EventType { ExpectedArival, Leaves, ExpectedArivalAtCross, ExpectedSpawn, SimulationFinished, Despawn, PassengerSpawn, PassengerSpawnReset }
 
     public struct Event
     {

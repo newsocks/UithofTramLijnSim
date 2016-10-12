@@ -31,10 +31,12 @@ namespace UithofTramLijn
             
             switch (Event.type)
             {
+                case EventType.PassengerSpawnReset:
+                    break;
                 case EventType.PassengerSpawn:
                     UithofTrack.Stops[Event.SpawnStation].WaitingPassengers.Add(curTime);
-                    double timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime / 900]);
-                    Scheduler.EventQue.Add(curTime + timeUntilNext, Event);
+                    //double timeUntilNext = (-Math.Log(Scheduler.rand.NextDouble()) / UithofTrack.Stops[Event.SpawnStation].ArrivalRate[(int)curTime / 900]);
+                    //Scheduler.EventQue.Add(curTime + timeUntilNext, Event);
                     break;
                 case EventType.Despawn:
                     tram = UithofTrack.Trams.Where(x => x.id == Event.TramId).First();

@@ -10,3 +10,4 @@ C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\obj\D
 C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\bin\Debug\UithofTramLijn.exe
 C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\bin\Debug\UithofTramLijn.pdb
 C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\bin\Debug\input-data-passengers.csv
+C:\Users\Pim Agterberg\Documents\tramlijn\UithofTramLijnSim\UithofTramLijn\obj\Debug\UithofTramLijn.csprojResolveAssemblyReference.cache
